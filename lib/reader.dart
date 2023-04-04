@@ -73,7 +73,15 @@ class MyAppNFCState extends State<MyAppNFC> {
 
   void _tagRead() {
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      result.value = tag.data;
+      // if-ul acesta verifica daca tagul nfc contine codul unic artbyte
+      //  momentan acesta este in format string, dar cand vom crea functiile pentru cripatre si decriptare, .contains() va
+      //  va contine variabila petru criptare si decriptare.
+      if(result.value.contains('artbyte')){
+      result.value = tag.data;}
+      else
+        {
+          result.value = 'tagul nu este valind! Viziteaza artbyte.ro pentru a acizitiona unul valid!';
+        }
       NfcManager.instance.stopSession();
     });
   }

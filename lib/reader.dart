@@ -73,7 +73,7 @@ class MyAppNFCState extends State<MyAppNFC> {
 
   void _tagRead() {
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      // if-ul acesta verifica daca tagul nfc contine codul unic artbyte
+      // if-ul acesta verific a daca tag ul nfc contine codul unic artbyte
       //  momentan acesta este in format string, dar cand vom crea functiile pentru cripatre si decriptare, .contains() va
       //  va contine variabila petru criptare si decriptare.
       if(result.value.contains('artbyte')){

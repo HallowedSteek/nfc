@@ -12,6 +12,7 @@ class MyAppNFC extends StatefulWidget {
 }
 
 class MyAppNFCState extends State<MyAppNFC> {
+  String _nfcData = '';
   ValueNotifier<dynamic> result = ValueNotifier(null);
 
   @override
@@ -70,13 +71,65 @@ class MyAppNFCState extends State<MyAppNFC> {
       ),
     );
   }
-
-  void _tagRead() {
-    NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      result.value = tag.data;
-      NfcManager.instance.stopSession();
-    });
+  void _tagRead() async {
+    try {
+      NfcManager.instance.startSession(
+        onDiscovered: (NfcTag tag) async {
+          setState(() {
+            _nfcData = tag.data.toString();
+          });
+          await NfcManager.instance.stopSession();
+          _handleNFCData(_nfcData);
+        },
+      );
+    } catch (e) {
+      print(e);
+    }
   }
+
+  void _handleNFCData(String nfcData) {
+    if (nfcData == '0758630309') {
+
+      // Do something if the specific data is found
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('NFC Tag Found'),
+            content: Text('The specific data is found on the NFC tag.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      // Do something else if the specific data is not found
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('NFC Tag Not Found'),
+            content: Text('The specific data is not found on the NFC tag.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
 
   void _ndefWrite() {
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {

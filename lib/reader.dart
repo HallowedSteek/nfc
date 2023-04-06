@@ -12,7 +12,6 @@ class MyAppNFC extends StatefulWidget {
 }
 
 class MyAppNFCState extends State<MyAppNFC> {
-  String _nfcData = '';
   ValueNotifier<dynamic> result = ValueNotifier(null);
 
   @override
@@ -76,10 +75,11 @@ class MyAppNFCState extends State<MyAppNFC> {
       NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
           setState(() {
-            _nfcData = tag.data.toString();
+            result.value = tag.data.toString();
+            String payloadAsString = String.fromCharCodes(result.value);
           });
           await NfcManager.instance.stopSession();
-          _handleNFCData(_nfcData);
+          _handleNFCData(result.value);
         },
       );
     } catch (e) {
@@ -87,35 +87,16 @@ class MyAppNFCState extends State<MyAppNFC> {
     }
   }
 
-  void _handleNFCData(String nfcData) {
-    if (nfcData == '0758630309') {
-
-      // Do something if the specific data is found
+   void _handleNFCData(String nfcData) {
+     String cachedMessage = result.value['artbyte'];
+    if(cachedMessage.isNotEmpty){
+      //Afisare meniu buton corect
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('NFC Tag Found'),
-            content: Text('The specific data is found on the NFC tag.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    } else {
-      // Do something else if the specific data is not found
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('NFC Tag Not Found'),
-            content: Text('The specific data is not found on the NFC tag.'),
+            title: Text('Tag ul este bun'),
+            content: Text('Acum poti continua'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -128,7 +109,29 @@ class MyAppNFCState extends State<MyAppNFC> {
         },
       );
     }
-  }
+    else {
+
+        // Do something else if the specific data is not found
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Oho'),
+              content: Text('Tagul nu este bun'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+    }
+     NfcManager.instance.stopSession();
+}
 
 
   void _ndefWrite() {
@@ -141,7 +144,7 @@ class MyAppNFCState extends State<MyAppNFC> {
         return;
       }
       NdefMessage message = NdefMessage([
-        NdefRecord.createText('Hello World!'),
+        NdefRecord.createText('artbyte'),
       ]);
 
 

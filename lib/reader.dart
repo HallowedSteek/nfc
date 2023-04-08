@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
-
+import 'dart:convert';
 
 
 class MyAppNFC extends StatefulWidget {
@@ -74,41 +74,54 @@ class MyAppNFCState extends State<MyAppNFC> {
     try {
       NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
+          final ndefTag = Ndef.from(tag);
           setState(() {
             result.value = tag.data.toString();
-            String payloadAsString = String.fromCharCodes(result.value);
           });
+          final ndefRecord = NdefRecord.createText(result.value);
+          var ndefMessage = ndefTag?.cachedMessage!;
+          final languageCodeAndContentBytes =
+          ndefRecord.payload.skip(1).toList();
+          //Note that the language code can be encoded in ASCI, if you need it be carfully with the endoding
+          final languageCodeAndContentText =
+          utf8.decode(languageCodeAndContentBytes);
+          //Cutting of the language code
+          final payload = languageCodeAndContentText.substring(2);
+          //Parsing the content to int
+          _handleNFCData(ndefMessage.toString());
           await NfcManager.instance.stopSession();
-          _handleNFCData(result.value);
         },
       );
     } catch (e) {
       print(e);
     }
+    NfcManager.instance.stopSession();
   }
 
-   void _handleNFCData(String nfcData) {
-     String cachedMessage = result.value['artbyte'];
-    if(cachedMessage.isNotEmpty){
-      //Afisare meniu buton corect
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Tag ul este bun'),
-            content: Text('Acum poti continua'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    }
+   void _handleNFCData(String ndefMessage) {
+     String Message = ndefMessage;
+     print("Succesfull");
+     setState(() {
+       if (Message == 'artbyte') {
+         //Afisare meniu buton corect
+         showDialog(
+           context: this.context,
+           builder: (BuildContext context) {
+             return AlertDialog(
+               title: Text('Tag ul este bun'),
+               content: Text('Acum poti continua'),
+               actions: [
+                 TextButton(
+                   onPressed: () {
+                     Navigator.pop(context);
+                   },
+                   child: Text('OK'),
+                 ),
+               ],
+             );
+           },
+         );
+       }
     else {
 
         // Do something else if the specific data is not found
@@ -129,8 +142,7 @@ class MyAppNFCState extends State<MyAppNFC> {
             );
           },
         );
-    }
-     NfcManager.instance.stopSession();
+    }});
 }
 
 
@@ -144,7 +156,7 @@ class MyAppNFCState extends State<MyAppNFC> {
         return;
       }
       NdefMessage message = NdefMessage([
-        NdefRecord.createText('artbyte'),
+        NdefRecord.createText('polA ME'),
       ]);
 
 

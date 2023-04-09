@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.nfc">
+    <uses-permission android:name="android.permission.INTERNET"/>
    <application
         android:label="nfc"
         android:name="${applicationName}"
@@ -32,4 +33,11 @@
             android:value="2" />
     </application>
     <uses-permission android:name="android.permission.NFC"/>
+<queries>
+<intent>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="https" />
+</intent>
+</queries>
 </manifest>

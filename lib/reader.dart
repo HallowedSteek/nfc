@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class MyAppNFC extends StatefulWidget {
@@ -70,82 +71,58 @@ class MyAppNFCState extends State<MyAppNFC> {
       ),
     );
   }
-  void _tagRead() async {
-    try {
-      NfcManager.instance.startSession(
-        onDiscovered: (NfcTag tag) async {
-          final ndefTag = Ndef.from(tag);
-          setState(() {
-            result.value = tag.data.toString();
-          });
-          final ndefRecord = NdefRecord.createText(result.value);
-          var ndefMessage = ndefTag?.cachedMessage!;
-          final languageCodeAndContentBytes =
-          ndefRecord.payload.skip(1).toList();
-          //Note that the language code can be encoded in ASCI, if you need it be carfully with the endoding
-          final languageCodeAndContentText =
-          utf8.decode(languageCodeAndContentBytes);
-          //Cutting of the language code
-          final payload = languageCodeAndContentText.substring(2);
-          //Parsing the content to int
-          _handleNFCData(ndefMessage.toString());
-          await NfcManager.instance.stopSession();
-        },
-      );
-    } catch (e) {
-      print(e);
-    }
-    NfcManager.instance.stopSession();
+
+  void _tagRead() {
+    NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
+      // if-ul acesta verific a daca tag ul nfc contine codul unic artbyte
+      //  momentan acesta este in format string, dar cand vom crea functiile pentru cripatre si decriptare, .contains() va
+      //  va contine variabila petru criptare si decriptare.
+      NfcManager.instance.stopSession();
+      final ndefTag = Ndef.from(tag);
+      final ndefRecord = NdefRecord.createText(tag.data.toString());
+      final ndefMessage = NdefMessage([ndefRecord]);
+      final wellKnownRecord = ndefMessage.records.first;
+        final date = wellKnownRecord.payload.toList();
+        //Note that the language code can be encoded in ASCI, if you need it be carfully with the endoding
+        final payload = utf8.decode(date);
+        String mesaj = payload.toString();
+      //Cutting of the language code
+      //   String payload = String.fromCharCodes(ndefRecord.payload);
+      if(mesaj.contains('artbyte')) {
+        result.value='Tagus este bun! Poti Continua';
+      }
+      else
+        {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Oho'),
+                content: Text('Tagul nu este bun.Dar poti achizitiona unul!!'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: InkWell(
+                        child:  Text('Open Browser'),
+                      onTap: () async {
+                        const url = 'https://www.youtube.com/@artbyte5198';
+                        if(await canLaunch(url)){
+                          await launch(url);
+                        }else {
+                          throw 'Could not launch $url';
+                        }
+                        }
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+    });
   }
-
-   void _handleNFCData(String ndefMessage) {
-     String Message = ndefMessage;
-     print("Succesfull");
-     setState(() {
-       if (Message == 'artbyte') {
-         //Afisare meniu buton corect
-         showDialog(
-           context: this.context,
-           builder: (BuildContext context) {
-             return AlertDialog(
-               title: Text('Tag ul este bun'),
-               content: Text('Acum poti continua'),
-               actions: [
-                 TextButton(
-                   onPressed: () {
-                     Navigator.pop(context);
-                   },
-                   child: Text('OK'),
-                 ),
-               ],
-             );
-           },
-         );
-       }
-    else {
-
-        // Do something else if the specific data is not found
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Oho'),
-              content: Text('Tagul nu este bun'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
-    }});
-}
-
-
   void _ndefWrite() {
     NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
       var ndef = Ndef.from(tag);
@@ -156,7 +133,7 @@ class MyAppNFCState extends State<MyAppNFC> {
         return;
       }
       NdefMessage message = NdefMessage([
-        NdefRecord.createText('polA ME'),
+        NdefRecord.createText('artbyte'),
       ]);
 
 
